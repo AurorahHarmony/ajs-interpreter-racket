@@ -48,4 +48,6 @@
  (paren-addition "(3 * 5) + (10 - 4);" 21)
  (bedmas "1 - 5 / 2 * 4 + 3;" -21/8) ;; TODO: Show this as a negative number
  (paren-multiplication "3 * 2 * (5 + 1 - 2);" 24)
+ (last-statement-return "1; 2; 3;" 3)
+
  )
