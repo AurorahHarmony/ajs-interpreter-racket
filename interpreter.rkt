@@ -22,17 +22,14 @@
 (define value-of-stmt-list
   (lambda (statements env)
     (cases statement-list statements
-      (stmt-list-empty ()
-                       ;;TODO: Have it return null
-                       (num-val 0))  ;; Base case: If empty, return a default value (e.g., 0)
-      (stmt-list (stmt rest)
-                 (cases statement-list rest
-                   (stmt-list-empty ()
-                                    (value-of-stmt stmt env))
-                   (stmt-list (stmt rest)
-                              (begin
-                                (value-of-stmt stmt env)
-                                (value-of-stmt-list rest env))))))))
+      [stmt-list-empty ()
+                       #f] ;; Null as base case
+      [stmt-list (stmt rest)
+                 (let ([val (value-of-stmt stmt env)])
+                   (let ([rest-val (value-of-stmt-list rest env)])
+                     (if (eq? rest-val #f)
+                         val
+                         rest-val)))])))
 
 ;;; value-of-stmt : Stmt Env -> ExpVal
 (define value-of-stmt
@@ -84,5 +81,5 @@
       )))
 
 
-(eopl:pretty-print (value-of-program (scan&parse "2 * (3 + 2);")))
+(eopl:pretty-print (value-of-program (scan&parse "5; 6; 7;")))
 ; (display (modulo 101 2))
