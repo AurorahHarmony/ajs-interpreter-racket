@@ -54,16 +54,16 @@
   (lambda (mult env)
     (cases multiplicative-expression mult
       ; [mul-expr (lhs rhs) (begin (display (value-of-unary lhs env)) (newline) 1)]
-      [mul-expr (lhs-val rhs) (value-of-multiplicative-tail (value-of-unary lhs-val) rhs env)]
+      [mul-expr (lhs-val rhs) (value-of-multiplicative-tail (value-of-unary lhs-val env) rhs env)]
       )))
 
 (define value-of-multiplicative-tail
   (lambda (lhs-val tail env)
     (cases multiplicative-tail tail
       [mul-tail-empty () lhs-val]
-      [mul-expr-tail (exp0 exp1) (* lhs-val (value-of-multiplicative-tail (value-of-unary exp0) exp1 env))]
-      [div-expr-tail (exp0 exp1) (/ lhs-val (value-of-multiplicative-tail (value-of-unary exp0) exp1 env))]
-      [mod-expr-tail (exp0 exp1) (modulo lhs-val (value-of-multiplicative-tail (value-of-unary exp0) exp1 env))]
+      [mul-expr-tail (exp0 exp1) (* lhs-val (value-of-multiplicative-tail (value-of-unary exp0 env) exp1 env))]
+      [div-expr-tail (exp0 exp1) (/ lhs-val (value-of-multiplicative-tail (value-of-unary exp0 env) exp1 env))]
+      [mod-expr-tail (exp0 exp1) (modulo lhs-val (value-of-multiplicative-tail (value-of-unary exp0 env) exp1 env))]
       )
     ))
 
@@ -77,11 +77,12 @@
     ))
 
 (define value-of-unary
-  (lambda (unary)
+  (lambda (unary env)
     (cases unary-expression unary
+      [paren-expr (exp0) (expval->num (value-of-expr-stmt exp0 env))]
       [num-expr (n) n]
       )))
 
 
-(eopl:pretty-print (value-of-program (scan&parse "1*2+3;")))
+(eopl:pretty-print (value-of-program (scan&parse "2 * (3 + 2);")))
 ; (display (modulo 101 2))

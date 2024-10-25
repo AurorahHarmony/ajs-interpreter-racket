@@ -44,4 +44,8 @@
  (substraction "1000 - 482;" 518)
  (multiplication "5 * 35;" 175)
  (division "10 / 4;" 5/2) ;; TODO: Show this as a float
+ (addition-decimal "9 + 22;" 31)
+ (paren-addition "(3 * 5) + (10 - 4);" 21)
+ (bedmas "1 - 5 / 2 * 4 + 3;" -21/8) ;; TODO: Show this as a negative number
+ (paren-multiplication "3 * 2 * (5 + 1 - 2);" 24)
  )

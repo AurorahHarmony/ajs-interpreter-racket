@@ -38,6 +38,7 @@
     (additive-tail () add-tail-empty)
 
     ;; UnaryExpression
+    (unary-expression ("(" expression ")") paren-expr)
     (unary-expression (number) num-expr)
 
     ))
