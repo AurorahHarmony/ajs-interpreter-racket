@@ -38,5 +38,10 @@
 
 ;;;;;;;;;;;;;;;; tests ;;;;;;;;;;;;;;;;
 (check-run
+ ;; Arithmetic
  (positive-const "345;" 345)
+ (addition "123 + 45;" 168)
+ (substraction "1000 - 482;" 518)
+ (multiplication "5 * 35;" 175)
+ (division "10 / 4;" 5/2) ;; TODO: Show this as a float
  )
