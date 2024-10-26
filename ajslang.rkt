@@ -6,6 +6,7 @@
     (comment ("//" (arbno (not #\newline))) skip) ;; Ignore single line comments
     (identifier ((or letter "_" "$") (arbno (or letter digit "_" "$"))) symbol) ; Identifiers / Variable names
     (number (digit (arbno digit)) number)
+    (number (digit (arbno digit) "." (arbno digit)) number)
     ; (number ("-" digit (arbno digit)) number)
     ))
 
