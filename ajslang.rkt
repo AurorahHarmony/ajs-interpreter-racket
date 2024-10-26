@@ -17,6 +17,7 @@
 
     ;(statement ("const" identifier "=" expression ";") const-declaration)
 
+    (statement ("const" identifier "=" expression ";") const-declaration)
     (statement (expression ";") expr-stmt)
 
     ;(expression (number) num-expr)
@@ -40,6 +41,7 @@
     ;; UnaryExpression
     (unary-expression ("(" expression ")") paren-expr)
     (unary-expression (number) num-expr)
+    (unary-expression (identifier) name-expr)
 
     ))
 
@@ -51,6 +53,25 @@
 (define just-scan
   (sllgen:make-string-scanner lex0 ajs-grammar))
 
+
+; #(struct:a-program
+;   #(struct:stmt-list
+;     #(struct:const-declaration
+;       cat
+;       #(struct:binop-expr
+;         #(struct:mul-expr #(struct:num-expr 2) #(struct:mul-tail-empty))
+;         #(struct:add-tail-empty)))
+;     #(struct:stmt-list
+;       #(struct:expr-stmt
+;         #(struct:binop-expr
+;           #(struct:mul-expr #(struct:num-expr 6) #(struct:mul-tail-empty))
+;           #(struct:add-tail-empty)))
+;       #(struct:stmt-list
+;         #(struct:expr-stmt
+;           #(struct:binop-expr
+;             #(struct:mul-expr #(struct:name-expr cat) #(struct:mul-tail-empty))
+;             #(struct:add-tail-empty)))
+;         #(struct:stmt-list-empty)))))
 ; 1+2*3;
 ; #(struct:a-program
 ;   #(struct:stmt-list
@@ -89,3 +110,17 @@
 ;         #(struct:mul-expr #(struct:num-expr 137) #(struct:mul-tail-empty))
 ;         #(struct:add-tail-empty)))
 ;     #(struct:stmt-list-empty)))
+
+
+; #(struct:a-program
+;   #(struct:stmt-list
+;     #(struct:expr-stmt
+;       #(struct:binop-expr
+;         #(struct:mul-expr #(struct:num-expr 1) #(struct:mul-tail-empty))
+;         #(struct:add-tail-empty)))
+;     #(struct:stmt-list
+;       #(struct:expr-stmt
+;         #(struct:binop-expr
+;           #(struct:mul-expr #(struct:num-expr 5) #(struct:mul-tail-empty))
+;           #(struct:add-tail-empty)))
+;       #(struct:stmt-list-empty))))

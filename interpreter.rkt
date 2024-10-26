@@ -16,7 +16,7 @@
   (lambda (pgm)
     (cases program pgm
       (a-program (body)
-                 (value-of-stmt-list body init-env)))))
+                 (value-of-stmt-list body (init-env))))))
 
 ;;; value-of-stmt-list : StmtList Env -> ExpVal
 (define value-of-stmt-list
@@ -25,32 +25,39 @@
       [stmt-list-empty ()
                        #f] ;; Null as base case
       [stmt-list (stmt rest)
-                 (let ([val (value-of-stmt stmt env)])
-                   (let ([rest-val (value-of-stmt-list rest env)])
+                 (let ([new-env (value-of-stmt stmt env)])
+                   (let ([rest-val (value-of-stmt-list rest new-env)])
                      (if (eq? rest-val #f)
-                         val
+                         (value-of-stmt-return stmt env)
                          rest-val)))])))
 
 ;;; value-of-stmt : Stmt Env -> ExpVal
+;;; Returns an updated env
 (define value-of-stmt
   (lambda (stmt env)
     (cases statement stmt
+      [const-declaration (id expr)
+                         (let [(val (value-of-expr-stmt expr env))]
+                           (extended-env id val env))]
       (expr-stmt (expr)
-                 (value-of-expr-stmt expr env))))) ;; Evaluate the expression in the statement
+                 (begin (value-of-expr-stmt expr env) env))))) ;; Evaluate the expression in the statement
+
+;;; value-of-stmt-return : Stmt Env -> ExpVal
+(define value-of-stmt-return
+  (lambda (stmt env)
+    (cases statement stmt
+      [const-declaration (id expr) #f]  ;; Declarations do not produce a value
+      [expr-stmt (expr) (value-of-expr-stmt expr env)]))) ;; Return the value of the expression
 
 ;;; value-of-expr : Expr Env -> ExpVal
 (define value-of-expr-stmt
   (lambda (expr env)
     (cases expression expr
-      ; (num-expr (n) (num-val n))))) ;; Simply return the number as an ExpVal
-      ; (binop-expr (expr rest) (display rest)))))
-      (binop-expr (lhs rhs) (num-val (value-of-add-tail (value-of-mul-expr lhs env) rhs env))))))
+      (binop-expr (lhs rhs) (value-of-add-tail (value-of-mul-expr lhs env) rhs env)))))
 
 (define value-of-mul-expr
-  ; (lambda (mul-expr env) (begin (display  mul-expr) (newline) 1)))
   (lambda (mult env)
     (cases multiplicative-expression mult
-      ; [mul-expr (lhs rhs) (begin (display (value-of-unary lhs env)) (newline) 1)]
       [mul-expr (lhs-val rhs) (value-of-multiplicative-tail (value-of-unary lhs-val env) rhs env)]
       )))
 
@@ -58,28 +65,49 @@
   (lambda (lhs-val tail env)
     (cases multiplicative-tail tail
       [mul-tail-empty () lhs-val]
-      [mul-expr-tail (exp0 exp1) (* lhs-val (value-of-multiplicative-tail (value-of-unary exp0 env) exp1 env))]
-      [div-expr-tail (exp0 exp1) (/ lhs-val (value-of-multiplicative-tail (value-of-unary exp0 env) exp1 env))]
-      [mod-expr-tail (exp0 exp1) (modulo lhs-val (value-of-multiplicative-tail (value-of-unary exp0 env) exp1 env))]
-      )
-    ))
+      [mul-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-unary exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (* lhs-num rhs-num))])
+                       (value-of-multiplicative-tail result exp1 env))]
+      [div-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-unary exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (/ lhs-num rhs-num))])
+                       (value-of-multiplicative-tail result exp1 env))]
+      [mod-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-unary exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (modulo lhs-num rhs-num))])
+                       (value-of-multiplicative-tail result exp1 env))])))
 
 (define value-of-add-tail
   (lambda (lhs-val tail env)
     (cases additive-tail tail
       [add-tail-empty () lhs-val]
-      [add-expr-tail (exp0 exp1) (+ lhs-val (value-of-add-tail (value-of-mul-expr exp0 env) exp1 env))]
-      [sub-expr-tail (exp0 exp1) (- lhs-val (value-of-add-tail (value-of-mul-expr exp0 env) exp1 env))]
-      )
-    ))
+      [add-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-mul-expr exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (+ lhs-num rhs-num))])
+                       (value-of-add-tail result exp1 env))]
+      [sub-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-mul-expr exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (- lhs-num rhs-num))])
+                       (value-of-add-tail result exp1 env))])))
 
 (define value-of-unary
   (lambda (unary env)
     (cases unary-expression unary
-      [paren-expr (exp0) (expval->num (value-of-expr-stmt exp0 env))]
-      [num-expr (n) n]
+      [paren-expr (exp0) (value-of-expr-stmt exp0 env)]
+      [num-expr (n) (num-val n)]
+      [name-expr (id) (lookup-env env id)]
       )))
 
 
-(eopl:pretty-print (value-of-program (scan&parse "5; 6; 7;")))
-; (display (modulo 101 2))
+(eopl:pretty-print (value-of-program (scan&parse "const cat = 7; const dog = cat + cat; dog;")))
