@@ -19,7 +19,16 @@
     ;(statement ("const" identifier "=" expression ";") const-declaration)
 
     (statement ("const" identifier "=" expression ";") const-declaration)
+    (statement ("function" identifier "(" identifier-list ")" block) func-declaration)
+    (statement ("return" expression ";") return-stmt)
     (statement (expression ";") expr-stmt)
+
+    (identifier-list (identifier identifier-list-tail) id-list)
+    (identifier-list () id-list-empty)
+    (identifier-list-tail ("," identifier identifier-list-tail) id-list-tail)
+    (identifier-list-tail () id-list-tail-empty)
+
+    (block ("{" statement-list "}") block-stmt)
 
     ;(expression (number) num-expr)
     ;; AdditiveExpression
@@ -42,7 +51,19 @@
     ;; UnaryExpression
     (unary-expression ("(" expression ")") paren-expr)
     (unary-expression (number) num-expr)
-    (unary-expression (identifier) name-expr)
+    ;(unary-expression (identifier) name-expr)
+    ;(unary-expression (identifier "(" argument-list ")") func-call)
+    ;(unary-expression (postfix-expression) postfix)
+    (unary-expression (identifier postfix-expression-tail) postfix-expr)
+
+    ;(postfix-expression (identifier postfix-expression-tail) postfix-expr)
+    (postfix-expression-tail ("(" argument-list ")") func-call-tail)
+    (postfix-expression-tail () postfix-tail-empty)
+
+    (argument-list (expression argument-list-tail) arg-list)
+    (argument-list () arg-list-empty)
+    (argument-list-tail ("," expression argument-list-tail) arg-list-tail)
+    (argument-list-tail () arg-list-tail-empty)
 
     ))
 

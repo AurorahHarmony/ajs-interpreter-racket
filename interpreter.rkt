@@ -39,14 +39,19 @@
       [const-declaration (id expr)
                          (let [(val (value-of-expr-stmt expr env))]
                            (extended-env id val env))]
-      (expr-stmt (expr)
-                 (begin (value-of-expr-stmt expr env) env))))) ;; Evaluate the expression in the statement
+      [func-declaration (id id-list block) 0] ;; TODO!!!
+      [return-stmt (expr) 0] ;; TODO!!!
+      [expr-stmt (expr)
+                 (begin (value-of-expr-stmt expr env) env)]))) ;; Evaluate the expression in the statement
 
 ;;; value-of-stmt-return : Stmt Env -> ExpVal
+;; Returns a value (mainly for use in the REPL)
 (define value-of-stmt-return
   (lambda (stmt env)
     (cases statement stmt
       [const-declaration (id expr) #f]  ;; Declarations do not produce a value
+      [func-declaration (id id-list block) 0] ;; TODO!!!
+      [return-stmt (expr) 0] ;; TODO!!!
       [expr-stmt (expr) (value-of-expr-stmt expr env)]))) ;; Return the value of the expression
 
 ;;; value-of-expr : Expr Env -> ExpVal
@@ -106,8 +111,20 @@
     (cases unary-expression unary
       [paren-expr (exp0) (value-of-expr-stmt exp0 env)]
       [num-expr (n) (num-val n)]
-      [name-expr (id) (lookup-env env id)]
+      ; [name-expr (id) (lookup-env env id)]
+      [postfix-expr (id tail) (let ([primary-val (lookup-env env id)])
+                                (value-of-postfix-tail primary-val tail env))]
       )))
 
+(define value-of-postfix-tail
+  (lambda (primary-val postfix-tail env)
+    (cases postfix-expression-tail postfix-tail
+      [func-call-tail (args) 0] ; TODO!!!
+      [postfix-tail-empty () primary-val]
+      )))
 
-(eopl:pretty-print (value-of-program (scan&parse "const cat = 7; const dog = cat + cat; dog;")))
+; (eopl:pretty-print (value-of-program (scan&parse "
+; const cat = 7;
+;  const dog = cat + cat; 
+;  dog;
+;  ")))
