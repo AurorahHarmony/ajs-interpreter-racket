@@ -180,4 +180,45 @@
   }
 
   close_enough(12.1, 12);" #f)
+
+ ;; ====== Recursive Functions ======
+ (factorial-4 "
+  function factorial(n) {
+    return n === 1
+              ? 1
+                  : n * factorial(n - 1);
+  }
+
+  factorial(4);" 24)
+
+ (factorial-8 "
+  function factorial(n) {
+    return n === 1
+              ? 1
+                  : n * factorial(n - 1);
+  }
+
+  factorial(8);" 40320)
+
+ (fibonacci-4 "
+  function fib(n) {
+      return n === 0
+                ? 0
+                    : n === 1
+                    ? 1
+                    : fib(n - 1) + fib(n - 2);
+    }
+
+    fib(4);" 3)
+
+ (fibonacci-8 "
+  function fib(n) {
+      return n === 0
+                ? 0
+                    : n === 1
+                    ? 1
+                    : fib(n - 1) + fib(n - 2);
+    }
+
+    fib(8);" 21)
  )

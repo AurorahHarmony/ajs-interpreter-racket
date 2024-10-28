@@ -76,6 +76,7 @@
 ;;;========= Procedures ===========
 (define-datatype proc proc?
   (procedure
+   (name symbol?)
    (params (list-of symbol?))
    (body statement-list?)
    (env environment?)))

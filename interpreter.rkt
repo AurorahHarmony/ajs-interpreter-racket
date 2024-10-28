@@ -58,12 +58,20 @@
       [const-declaration (id expr)
                          (let ([val (value-of-expr-stmt expr env)])
                            (return-result (extended-env id val env) (return-none (undefined-val))))]
+      ; [func-declaration (id params block)
+      ;                   (let* (
+      ;                          [param-list (id-list->symbols params)]
+      ;                          [stmt-list (unwrap-block block)]
+      ;                          [func (proc-val (procedure param-list stmt-list env))]
+      ;                          [rec-env (extended-env id func env)]
+      ;                          [func-rec (proc-val (procedure param-list stmt-list rec-env))])
+      ;                     (return-result (extended-env id func-rec env) (return-none (undefined-val))))]
       [func-declaration (id params block)
-                        (let* (
-                               [param-list (id-list->symbols params)]
+                        (let* ([param-list (id-list->symbols params)]
                                [stmt-list (unwrap-block block)]
-                               [func (proc-val (procedure param-list stmt-list env))])
-                          (return-result (extended-env id func env) (return-none (undefined-val))))]
+                               [closure (proc-val (procedure id param-list stmt-list env))]
+                               [new-env (extended-env id closure env)])
+                          (return-result new-env (return-none (undefined-val))))]
       [return-stmt (expr)
                    (let ([val (value-of-expr-stmt expr env)])
                      (return-result env (return-some val)))]
@@ -296,25 +304,23 @@
 (define value-of-postfix-tail
   (lambda (primary-val postfix-tail env)
     (cases postfix-expression-tail postfix-tail
-      [postfix-tail-empty () primary-val] ;; No tail means we aren't making a function call, so this must be a constant
-      [func-call-tail (args) (cases expval primary-val
-                               [proc-val (the-proc)
-                                         (cases proc the-proc
-                                           [procedure (params body saved-env)
-                                                      (let* ([arg-values (value-of-arguments args env)]
-                                                             [new-env (extend-env-for-func params arg-values saved-env)]
-                                                             [result (value-of-stmt-list body new-env)])
-                                                        (cases inter-result result
-                                                          [return-result (final-env ret-val)
-                                                                         (cases ret-option ret-val
-                                                                           [return-some (val) val]
-                                                                           [return-none (val) val]
-                                                                           [return-end-of-stmts () (undefined-val)]
-                                                                           )]))])]
-                               [else (eopl:error 'value-of-postfix-tail "Not a function")]
-                               )]
-      ; TODO!!!
-      )))
+      [postfix-tail-empty () primary-val]
+      [func-call-tail (args)
+                      (cases expval primary-val
+                        [proc-val (the-proc)
+                                  (cases proc the-proc
+                                    [procedure (name params body saved-env)
+                                               (let* ([arg-values (value-of-arguments args env)]
+                                                      [func-env (extended-env name primary-val saved-env)] ; Extend with function's own binding
+                                                      [extended-env (extend-env-for-func params arg-values func-env)]
+                                                      [result (value-of-stmt-list body extended-env)])
+                                                 (cases inter-result result
+                                                   [return-result (final-env ret-val)
+                                                                  (cases ret-option ret-val
+                                                                    [return-some (val) val]
+                                                                    [return-none (val) val]
+                                                                    [return-end-of-stmts () (undefined-val)])]))])]
+                        [else (eopl:error 'value-of-postfix-tail "Not a function")])])))
 
 (define value-of-arguments
   (lambda (args env)
@@ -342,14 +348,4 @@
                                  (extended-env (car params) (car args) env))
             ))))
 
-(eopl:pretty-print (value-of-program (scan&parse "
-function abs(x) {
-    return x >= 0 ? x : -x;
-}
-function close_enough(x, y) {
-    return abs(x - y) < 0.001;
-}
-
-// close_enough(12.0003, 12);
-// close_enough(12.1, 12);
- ")))
+;; (eopl:pretty-print (value-of-program (scan&parse "")))
