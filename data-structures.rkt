@@ -2,6 +2,7 @@
 ;;;
 ;;; Data structures for AJS-lang
 ;;;
+(require "ajslang.rkt")
 (provide (all-defined-out))
 
 ;;;========= Expressed Values ===========
@@ -9,7 +10,10 @@
 ;;; Expressed values -- either a number or a boolean (if needed later)
 (define-datatype expval expval?
   (num-val (value number?))
-  (bool-val (boolean boolean?)))
+  (bool-val (boolean boolean?))
+  (proc-val (proc proc?))
+  (null-val)
+  (undefined-val))
 
 ;;; extractors
 
@@ -24,15 +28,25 @@
   (eopl:error 'expval-extractors "Looking for a ~s, found ~s"
               variant value))
 
+;;;========= Return Values ===========
+(define-datatype inter-result inter-result?
+  (return-result
+   (env environment?)
+   (return-val ret-option?)))
+
+(define-datatype ret-option ret-option?
+  (return-some (val expval?)) ;; a return statement was reached
+  (return-none (val expval?)) ;; no return statement was reached
+  (return-end-of-stmts))
+
+;;;========= Procedures ===========
+(define-datatype proc proc?
+  (procedure
+   (params (list-of symbol?))
+   (body statement-list?)
+   (env environment?)))
+
 ;;;========= Environment Structures ===========
-
-;;; The environment is currently unused since AJS-lang doesn't include variables
-; (define-datatype environment environment?
-;   (empty-env))
-
-; (define (lookup-env env search-sym)
-;   (eopl:error 'lookup-env "No environment or bindings in AJS-lang."))
-
 (define-datatype environment environment?
   (empty-env)
   (extended-env

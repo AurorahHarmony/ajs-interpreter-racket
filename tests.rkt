@@ -60,4 +60,41 @@
                                const radius = 10;
                                const circumference = 2 * pi * radius;
                                circumference;" 62.8318)
+
+ ;; Function Declarations
+ (func-call "function square(x) {
+              return x * x;
+             }
+             square(21);" 441)
+ (func-call-param-expression "function square(x) {
+                                return x * x;
+                              }
+                              square(4 + 2);" 36)
+ (func-call-as-expression "function square(x) {
+                            return x * x;
+                           }
+                           square(3) + square(4);" 25)
+
+ ;; Compound Functions
+ (simple-compound "
+  function square(x) {
+    return x * x;
+  }
+
+  square(square(3));" 81)
+
+ (complex-compound "
+  function square(x) {
+    return x * x;
+  }
+
+  function sum_of_squares(x, y) {
+      return square(x) + square(y);
+  }
+
+  function f(a) {
+      return( sum_of_squares(a + 1, a * 2));
+  }
+
+  f(5);" 136)
  )

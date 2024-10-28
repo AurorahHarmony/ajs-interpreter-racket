@@ -7,16 +7,14 @@
     (identifier ((or letter "_" "$") (arbno (or letter digit "_" "$"))) symbol) ; Identifiers / Variable names
     (number (digit (arbno digit)) number)
     (number (digit (arbno digit) "." (arbno digit)) number)
-    ; (number ("-" digit (arbno digit)) number)
     ))
 
 (define ajs-grammar
   '((program (statement-list) a-program) ;; A program is a sequence of statements
 
+    ;; Statements
     (statement-list (statement statement-list) stmt-list)
     (statement-list () stmt-list-empty)
-
-    ;(statement ("const" identifier "=" expression ";") const-declaration)
 
     (statement ("const" identifier "=" expression ";") const-declaration)
     (statement ("function" identifier "(" identifier-list ")" block) func-declaration)
@@ -30,7 +28,6 @@
 
     (block ("{" statement-list "}") block-stmt)
 
-    ;(expression (number) num-expr)
     ;; AdditiveExpression
     (expression (multiplicative-expression additive-tail) binop-expr)
 
@@ -51,12 +48,9 @@
     ;; UnaryExpression
     (unary-expression ("(" expression ")") paren-expr)
     (unary-expression (number) num-expr)
-    ;(unary-expression (identifier) name-expr)
-    ;(unary-expression (identifier "(" argument-list ")") func-call)
-    ;(unary-expression (postfix-expression) postfix)
     (unary-expression (identifier postfix-expression-tail) postfix-expr)
 
-    ;(postfix-expression (identifier postfix-expression-tail) postfix-expr)
+    ;; Postfix (for function calls)
     (postfix-expression-tail ("(" argument-list ")") func-call-tail)
     (postfix-expression-tail () postfix-tail-empty)
 
@@ -74,75 +68,3 @@
 
 (define just-scan
   (sllgen:make-string-scanner lex0 ajs-grammar))
-
-
-; #(struct:a-program
-;   #(struct:stmt-list
-;     #(struct:const-declaration
-;       cat
-;       #(struct:binop-expr
-;         #(struct:mul-expr #(struct:num-expr 2) #(struct:mul-tail-empty))
-;         #(struct:add-tail-empty)))
-;     #(struct:stmt-list
-;       #(struct:expr-stmt
-;         #(struct:binop-expr
-;           #(struct:mul-expr #(struct:num-expr 6) #(struct:mul-tail-empty))
-;           #(struct:add-tail-empty)))
-;       #(struct:stmt-list
-;         #(struct:expr-stmt
-;           #(struct:binop-expr
-;             #(struct:mul-expr #(struct:name-expr cat) #(struct:mul-tail-empty))
-;             #(struct:add-tail-empty)))
-;         #(struct:stmt-list-empty)))))
-; 1+2*3;
-; #(struct:a-program
-;   #(struct:stmt-list
-;     #(struct:expr-stmt
-;       #(struct:binop-expr
-;         #(struct:mul-expr #(struct:num-expr 1) #(struct:mul-tail-empty))
-;         #(struct:add-expr-tail
-;           #(struct:mul-expr
-;             #(struct:num-expr 2)
-;             #(struct:mul-expr-tail
-;               #(struct:num-expr 3)
-;               #(struct:mul-tail-empty)))
-;           #(struct:add-tail-empty))))
-;     #(struct:stmt-list-empty)))
-
-; 1*2+3;
-; #(struct:a-program
-;   #(struct:stmt-list
-;     #(struct:expr-stmt
-;       #(struct:binop-expr
-;         #(struct:mul-expr
-;           #(struct:num-expr 1)
-;           #(struct:mul-expr-tail
-;             #(struct:num-expr 2)
-;             #(struct:mul-tail-empty)))
-;         #(struct:add-expr-tail
-;           #(struct:mul-expr #(struct:num-expr 3) #(struct:mul-tail-empty))
-;           #(struct:add-tail-empty))))
-;     #(struct:stmt-list-empty)))
-
-; 137;
-; #(struct:a-program
-;   #(struct:stmt-list
-;     #(struct:expr-stmt
-;       #(struct:binop-expr
-;         #(struct:mul-expr #(struct:num-expr 137) #(struct:mul-tail-empty))
-;         #(struct:add-tail-empty)))
-;     #(struct:stmt-list-empty)))
-
-
-; #(struct:a-program
-;   #(struct:stmt-list
-;     #(struct:expr-stmt
-;       #(struct:binop-expr
-;         #(struct:mul-expr #(struct:num-expr 1) #(struct:mul-tail-empty))
-;         #(struct:add-tail-empty)))
-;     #(struct:stmt-list
-;       #(struct:expr-stmt
-;         #(struct:binop-expr
-;           #(struct:mul-expr #(struct:num-expr 5) #(struct:mul-tail-empty))
-;           #(struct:add-tail-empty)))
-;       #(struct:stmt-list-empty))))
