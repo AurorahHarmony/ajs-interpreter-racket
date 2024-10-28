@@ -4,7 +4,6 @@
 (define lex0
   '((whitespace (whitespace) skip) ;; Skip all whitespace
     (comment ("//" (arbno (not #\newline))) skip) ;; Ignore single line comments
-    ;; TODO: Ignore reserved keywords
     (identifier ((or letter "_" "$") (arbno (or letter digit "_" "$"))) symbol) ; Identifiers / Variable names
     (number (digit (arbno digit)) number)
     (number (digit (arbno digit) "." (arbno digit)) number)
@@ -30,6 +29,7 @@
     (block ("{" statement-list "}") block-stmt)
 
     ;; AdditiveExpression
+    ;(expression (multiplicative-expression additive-tail) binop-expr)
     (expression (conditional-expression) cond-expr)
 
     (conditional-expression (logical-or-expression conditional-expression-tail) conditional-expr)

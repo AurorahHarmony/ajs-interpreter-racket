@@ -58,14 +58,6 @@
       [const-declaration (id expr)
                          (let ([val (value-of-expr-stmt expr env)])
                            (return-result (extended-env id val env) (return-none (undefined-val))))]
-      ; [func-declaration (id params block)
-      ;                   (let* (
-      ;                          [param-list (id-list->symbols params)]
-      ;                          [stmt-list (unwrap-block block)]
-      ;                          [func (proc-val (procedure param-list stmt-list env))]
-      ;                          [rec-env (extended-env id func env)]
-      ;                          [func-rec (proc-val (procedure param-list stmt-list rec-env))])
-      ;                     (return-result (extended-env id func-rec env) (return-none (undefined-val))))]
       [func-declaration (id params block)
                         (let* ([param-list (id-list->symbols params)]
                                [stmt-list (unwrap-block block)]
@@ -348,4 +340,13 @@
                                  (extended-env (car params) (car args) env))
             ))))
 
-;; (eopl:pretty-print (value-of-program (scan&parse "")))
+; (eopl:pretty-print (value-of-program (scan&parse "
+; function fib(n) {
+;     return n === 0
+;                ? 0
+;                    : n === 1
+;                    ? 1
+;                    : fib(n - 1) + fib(n - 2);
+; }
+
+; fib(8);")))

@@ -44,9 +44,9 @@
  (substraction "1000 - 482;" 518)
  (multiplication "5 * 35;" 175)
  (division "10 / 4;" 5/2) ;; TODO: Show this as a float
- (addition-decimal "9.5 + 22;" 31.5) ;; TODO: Add decimal support
+ (addition-decimal "9.5 + 22;" 31.5)
  (paren-addition "(3 * 5) + (10 - 4);" 21)
- (bedmas "1 - 5 / 2 * 4 + 3;" -6) ;; TODO: Show this as a negative number
+ (bedmas "1 - 5 / 2 * 4 + 3;" -6)
  (paren-multiplication "3 * 2 * (5 + 1 - 2);" 24)
  (last-statement-return "1; 2; 3;" 3)
 
@@ -55,7 +55,7 @@
  (const-declaration-retrieval2 "const size = 5; 5 * size;" 25)
  (const-times-const "const pi = 3.14159;
                      const radius = 10;
-                     pi * radius * radius;" 314.159) ;; TODO: Add decimal support
+                     pi * radius * radius;" 314.159)
  (const-times-const-retrieval "const pi = 3.14159; 
                                const radius = 10;
                                const circumference = 2 * pi * radius;
