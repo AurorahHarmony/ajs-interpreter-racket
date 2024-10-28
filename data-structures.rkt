@@ -5,6 +5,17 @@
 (require "ajslang.rkt")
 (provide (all-defined-out))
 
+(define print-ready-value
+  (lambda (prgm-out)
+    (cases expval prgm-out
+      [num-val (val) val]
+      [bool-val (val) (if (eq? val #t)
+                          'true
+                          'false)]
+      [proc-val (val) 'undefined]
+      [undefined-val () 'undefined]
+      )))
+
 ;;;========= Expressed Values ===========
 
 ;;; Expressed values -- either a number or a boolean (if needed later)
@@ -12,11 +23,9 @@
   (num-val (value number?))
   (bool-val (boolean boolean?))
   (proc-val (proc proc?))
-  (null-val)
   (undefined-val))
 
 ;;; extractors
-
 ;;; expval->num : ExpVal -> Int
 (define (expval->num v)
   (cases expval v
