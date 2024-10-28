@@ -2,13 +2,12 @@
 ;;;
 ;;;========== Interpreter for AJS-lang ==========
 ;;;
-
 (require "ajslang.rkt")
 (require "data-structures.rkt")
 
 (provide value-of-program)
 
-;;; The initial environment (currently unused since no variables)
+;;; The initial environment
 (define init-env empty-env)
 
 ;;; value-of-program : Program -> ExpVal
@@ -72,6 +71,7 @@
                    (return-result env (return-none val)))]
       )))
 
+;; id-list->symbols : IDList -> List of Symbols
 ;; Extracts a list of sybols from an ID list
 (define id-list->symbols
   (lambda (ids)
@@ -85,6 +85,7 @@
       [id-list-tail-empty () '()]
       [id-list-tail (id tail) (cons id (id-list-tail->symbols tail))])))
 
+;; unwrap-block : Block -> StmtList
 ;; Unwraps a statement-list from within a block, for use in storing function definitions
 (define unwrap-block
   (lambda (blk)

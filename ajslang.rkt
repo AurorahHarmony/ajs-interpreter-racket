@@ -29,14 +29,15 @@
     (block ("{" statement-list "}") block-stmt)
 
     ;; AdditiveExpression
-    ;(expression (multiplicative-expression additive-tail) binop-expr)
     (expression (conditional-expression) cond-expr)
 
+    ;; Conditional Expressions
     (conditional-expression (logical-or-expression conditional-expression-tail) conditional-expr)
 
     (conditional-expression-tail ("?" expression ":" conditional-expression) cond-expr-tail)
     (conditional-expression-tail () cond-expr-tail-empty)
 
+    ;; Logical Expressions
     (logical-or-expression (logical-and-expression logical-or-tail) logical-or)
 
     (logical-or-tail ("||" logical-and-expression logical-or-tail) or-expr-tail)
@@ -47,6 +48,7 @@
     (logical-and-tail ("&&" equality-expression logical-and-tail) and-expr-tail)
     (logical-and-tail () logical-and-tail-empty)
 
+    ;; Equality Expressions
     (equality-expression (relational-expression equality-tail) equality-expr)
 
     (equality-tail ("===" relational-expression equality-tail) seq-expr-tail)
@@ -55,6 +57,7 @@
     (equality-tail ("!=" relational-expression equality-tail) neq-expr-tail)
     (equality-tail () equality-tail-empty)
 
+    ;; Relational Expressions
     (relational-expression (additive-expression relational-tail) relational-expr)
 
     (relational-tail ("<" additive-expression relational-tail) lt-expr-tail)
