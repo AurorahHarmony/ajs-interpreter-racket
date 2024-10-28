@@ -23,10 +23,44 @@
     (num-val (num) num)
     (else (expval-extractor-error 'num v))))
 
+(define expval->boolean
+  (lambda (v)
+    (cases expval v
+      [bool-val (b) b]
+      [num-val (n) (not (zero? n))]
+      [else (expval-extractor-error 'bool v)])))
+
 ;;; expval-extractor-error : Symbol * ExpVal -> Error
 (define (expval-extractor-error variant value)
   (eopl:error 'expval-extractors "Looking for a ~s, found ~s"
               variant value))
+
+;;; Boolean comparison
+(define expval-equals?
+  (lambda (val1 val2)
+    (cases expval val1
+      (num-val (n1)
+               (cases expval val2
+                 (num-val (n2) (= n1 n2))
+                 (else #f)))
+      (bool-val (b1)
+                (cases expval val2
+                  (bool-val (b2) (eq? b1 b2))
+                  (else #f)))
+      (else #f))))
+
+(define expval-strict-equals?
+  (lambda (val1 val2)
+    (cases expval val1
+      (num-val (n1)
+               (cases expval val2
+                 (num-val (n2) (= n1 n2))
+                 (else #f)))
+      (bool-val (b1)
+                (cases expval val2
+                  (bool-val (b2) (eq? b1 b2))
+                  (else #f)))
+      (else #f))))
 
 ;;;========= Return Values ===========
 (define-datatype inter-result inter-result?

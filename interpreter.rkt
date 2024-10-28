@@ -95,7 +95,145 @@
 (define value-of-expr-stmt
   (lambda (expr env)
     (cases expression expr
-      (binop-expr (lhs rhs) (value-of-add-tail (value-of-mul-expr lhs env) rhs env)))))
+      ; (binop-expr (lhs rhs) (value-of-add-tail (value-of-mul-expr lhs env) rhs env)))))
+      [cond-expr (expr) (value-of-conditional-expr expr env)]
+      )))
+
+(define value-of-conditional-expr
+  (lambda (expr env)
+    (cases conditional-expression expr
+      (conditional-expr (logical-or-expr cond-tail)
+                        (let ([test-val (value-of-logical-or-expr logical-or-expr env)])
+                          (value-of-conditional-tail test-val cond-tail env))))))
+
+(define value-of-conditional-tail
+  (lambda (test-val cond-tail env)
+    (cases conditional-expression-tail cond-tail
+      (cond-expr-tail (true-expr false-expr)
+                      (if (expval->boolean test-val)
+                          (value-of-expr-stmt true-expr env)
+                          (value-of-conditional-expr false-expr env)))
+      (cond-expr-tail-empty ()
+                            test-val))))
+
+(define value-of-logical-or-expr
+  (lambda (expr env)
+    (cases logical-or-expression expr
+      (logical-or (lhs rhs)
+                  (value-of-logical-or-tail (value-of-logical-and-expr lhs env) rhs env)))))
+
+(define value-of-logical-or-tail
+  (lambda (lhs-val tail env)
+    (cases logical-or-tail tail
+      (or-expr-tail (rhs tail-rest)
+                    (if (expval->boolean lhs-val)
+                        lhs-val  ; Short-circuit evaluation
+                        (value-of-logical-or-tail (value-of-logical-and-expr rhs env) tail-rest env)))
+      (logical-or-tail-empty ()
+                             lhs-val))))
+
+(define value-of-logical-and-expr
+  (lambda (expr env)
+    (cases logical-and-expression expr
+      (logical-and-expr (lhs rhs)
+                        (value-of-logical-and-tail (value-of-equality-expr lhs env) rhs env)))))
+
+(define value-of-logical-and-tail
+  (lambda (lhs-val tail env)
+    (cases logical-and-tail tail
+      (and-expr-tail (rhs tail-rest)
+                     (if (not (expval->boolean lhs-val))
+                         lhs-val  ; Short-circuit evaluation
+                         (value-of-logical-and-tail (value-of-equality-expr rhs env) tail-rest env)))
+      (logical-and-tail-empty ()
+                              lhs-val))))
+
+(define value-of-equality-expr
+  (lambda (expr env)
+    (cases equality-expression expr
+      (equality-expr (lhs tail)
+                     (value-of-equality-tail (value-of-relational-expr lhs env) tail env)))))
+
+(define value-of-equality-tail
+  (lambda (lhs-val tail env)
+    (cases equality-tail tail
+      (seq-expr-tail (rhs tail-rest)
+                     (let* ([rhs-val (value-of-relational-expr rhs env)]
+                            [result (bool-val (expval-strict-equals? lhs-val rhs-val))])
+                       (value-of-equality-tail result tail-rest env)))
+      (sneq-expr-tail (rhs tail-rest)
+                      (let* ([rhs-val (value-of-relational-expr rhs env)]
+                             [result (bool-val (not (expval-strict-equals? lhs-val rhs-val)))])
+                        (value-of-equality-tail result tail-rest env)))
+      (eq-expr-tail (rhs tail-rest)
+                    (let* ([rhs-val (value-of-relational-expr rhs env)]
+                           [result (bool-val (expval-equals? lhs-val rhs-val))])
+                      (value-of-equality-tail result tail-rest env)))
+      (neq-expr-tail (rhs tail-rest)
+                     (let* ([rhs-val (value-of-relational-expr rhs env)]
+                            [result (bool-val (not (expval-equals? lhs-val rhs-val)))])
+                       (value-of-equality-tail result tail-rest env)))
+      (equality-tail-empty ()
+                           lhs-val))))
+
+(define value-of-relational-expr
+  (lambda (expr env)
+    (cases relational-expression expr
+      (relational-expr (lhs tail)
+                       (value-of-relational-tail (value-of-additive-expr lhs env) tail env)))))
+
+(define value-of-relational-tail
+  (lambda (lhs-val tail env)
+    (cases relational-tail tail
+      (lt-expr-tail (rhs tail-rest)
+                    (let* ([rhs-val (value-of-additive-expr rhs env)]
+                           [lhs-num (expval->num lhs-val)]
+                           [rhs-num (expval->num rhs-val)]
+                           [result (bool-val (< lhs-num rhs-num))])
+                      (value-of-relational-tail result tail-rest env)))
+      (gt-expr-tail (rhs tail-rest)
+                    (let* ([rhs-val (value-of-additive-expr rhs env)]
+                           [lhs-num (expval->num lhs-val)]
+                           [rhs-num (expval->num rhs-val)]
+                           [result (bool-val (> lhs-num rhs-num))])
+                      (value-of-relational-tail result tail-rest env)))
+      (le-expr-tail (rhs tail-rest)
+                    (let* ([rhs-val (value-of-additive-expr rhs env)]
+                           [lhs-num (expval->num lhs-val)]
+                           [rhs-num (expval->num rhs-val)]
+                           [result (bool-val (<= lhs-num rhs-num))])
+                      (value-of-relational-tail result tail-rest env)))
+      (ge-expr-tail (rhs tail-rest)
+                    (let* ([rhs-val (value-of-additive-expr rhs env)]
+                           [lhs-num (expval->num lhs-val)]
+                           [rhs-num (expval->num rhs-val)]
+                           [result (bool-val (>= lhs-num rhs-num))])
+                      (value-of-relational-tail result tail-rest env)))
+      (relational-tail-empty ()
+                             lhs-val))))
+
+(define value-of-additive-expr
+  (lambda (expr env)
+    (cases additive-expression expr
+      (additive-expr (lhs tail)
+                     (value-of-add-tail (value-of-mul-expr lhs env) tail env)))))
+
+(define value-of-add-tail
+  (lambda (lhs-val tail env)
+    (cases additive-tail tail
+      [add-tail-empty () lhs-val]
+      [add-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-mul-expr exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (+ lhs-num rhs-num))])
+                       (value-of-add-tail result exp1 env))]
+      [sub-expr-tail (exp0 exp1)
+                     (let* ([rhs-val (value-of-mul-expr exp0 env)]
+                            [lhs-num (expval->num lhs-val)]
+                            [rhs-num (expval->num rhs-val)]
+                            [result (num-val (- lhs-num rhs-num))])
+                       (value-of-add-tail result exp1 env))])))
 
 (define value-of-mul-expr
   (lambda (mult env)
@@ -126,31 +264,33 @@
                             [result (num-val (modulo lhs-num rhs-num))])
                        (value-of-multiplicative-tail result exp1 env))])))
 
-(define value-of-add-tail
-  (lambda (lhs-val tail env)
-    (cases additive-tail tail
-      [add-tail-empty () lhs-val]
-      [add-expr-tail (exp0 exp1)
-                     (let* ([rhs-val (value-of-mul-expr exp0 env)]
-                            [lhs-num (expval->num lhs-val)]
-                            [rhs-num (expval->num rhs-val)]
-                            [result (num-val (+ lhs-num rhs-num))])
-                       (value-of-add-tail result exp1 env))]
-      [sub-expr-tail (exp0 exp1)
-                     (let* ([rhs-val (value-of-mul-expr exp0 env)]
-                            [lhs-num (expval->num lhs-val)]
-                            [rhs-num (expval->num rhs-val)]
-                            [result (num-val (- lhs-num rhs-num))])
-                       (value-of-add-tail result exp1 env))])))
 
 (define value-of-unary
   (lambda (unary env)
     (cases unary-expression unary
-      [paren-expr (exp0) (value-of-expr-stmt exp0 env)]
-      [num-expr (n) (num-val n)]
-      ; [name-expr (id) (lookup-env env id)]
-      [postfix-expr (id tail) (let ([primary-val (lookup-env env id)])
-                                (value-of-postfix-tail primary-val tail env))]
+      [not-expr (expr)
+                (let ([val (value-of-unary expr env)])
+                  (bool-val (not (expval->boolean val))))]
+      [neg-expr (expr)
+                (let ([val (value-of-unary expr env)])
+                  (num-val (- 0 (expval->num val))))]
+      [primary-expr (expr) (value-of-primary expr env)]
+      )))
+
+(define value-of-primary
+  (lambda (expr env)
+    (cases primary-expression expr
+      [paren-expr (exp0)
+                  (value-of-expr-stmt exp0 env)]
+      [true-expr ()
+                 (bool-val #t)]
+      [false-expr ()
+                  (bool-val #f)]
+      [num-expr (n)
+                (num-val n)]
+      [postfix-expr (id tail)
+                    (let ([primary-val (lookup-env env id)])
+                      (value-of-postfix-tail primary-val tail env))]
       )))
 
 (define value-of-postfix-tail
@@ -203,19 +343,13 @@
             ))))
 
 (eopl:pretty-print (value-of-program (scan&parse "
-function square(x) {
-    return x * x;
+function abs(x) {
+    return x >= 0 ? x : -x;
+}
+function close_enough(x, y) {
+    return abs(x - y) < 0.001;
 }
 
-square(square(3));
-
-function sum_of_squares(x, y) {
-    return square(x) + square(y);
-}
-
-function f(a) {
-    return( sum_of_squares(a + 1, a * 2));
-}
-
-f(5);
+// close_enough(12.0003, 12);
+// close_enough(12.1, 12);
  ")))

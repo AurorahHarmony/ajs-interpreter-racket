@@ -38,7 +38,7 @@
 
 ;;;;;;;;;;;;;;;; tests ;;;;;;;;;;;;;;;;
 (check-run
- ;; Arithmetic
+ ;; ====== Arithmetic ======
  (positive-const "345;" 345)
  (addition "123 + 45;" 168)
  (substraction "1000 - 482;" 518)
@@ -50,7 +50,7 @@
  (paren-multiplication "3 * 2 * (5 + 1 - 2);" 24)
  (last-statement-return "1; 2; 3;" 3)
 
- ;; Constant Declarations
+ ;; ====== Constant Declarations ======
  (const-declaration-retrieval "const size = 5; size;" 5)
  (const-declaration-retrieval2 "const size = 5; 5 * size;" 25)
  (const-times-const "const pi = 3.14159;
@@ -61,7 +61,7 @@
                                const circumference = 2 * pi * radius;
                                circumference;" 62.8318)
 
- ;; Function Declarations
+ ;; ====== Function Declarations ======
  (func-call "function square(x) {
               return x * x;
              }
@@ -75,7 +75,7 @@
                            }
                            square(3) + square(4);" 25)
 
- ;; Compound Functions
+ ;; ====== Compound Functions ======
  (simple-compound "
   function square(x) {
     return x * x;
@@ -97,4 +97,87 @@
   }
 
   f(5);" 136)
+
+ ;; ====== Booleans and Conditionals ======
+ (and-true "(3 > 2) && (5 < 9);" #t)
+ (and-false "(3 > 2) && (5 > 9);" #f)
+ (or-true "(3 > 2) || (5 > 9);" #t)
+ (or-true-2 "(3 < 2) || (5 < 9);" #t)
+ (or-false "(3 < 2) || (5 > 9);" #f)
+
+ ;; Absolutes
+ (abs-pos "
+  function abs(x) {
+      return x >= 0 ? x : -x;
+    }
+
+  abs(6);" 6)
+
+ (abs-neg "
+  function abs(x) {
+      return x >= 0 ? x : -x;
+    }
+
+  abs(-5);" 5)
+
+ (abs-zero "
+  function abs(x) {
+      return x >= 0 ? x : -x;
+    }
+
+  abs(0);" 0)
+
+ ;; Absolutes 2
+ (abs2-pos "
+  function abs2(x) {
+      return x > 0
+                ? x
+                    : x === 0
+                    ? 0
+                    : -x;
+  }
+
+  abs2(10);" 10)
+ (abs2-neg "
+  function abs2(x) {
+      return x > 0
+                ? x
+                    : x === 0
+                    ? 0
+                    : -x;
+  }
+
+  abs2(-33);" 33)
+
+ (abs2-zero "
+  function abs2(x) {
+      return x > 0
+                ? x
+                    : x === 0
+                    ? 0
+                    : -x;
+  }
+
+  abs2(0);" 0)
+
+ ;; Close enough
+ (close-enough "
+  function abs(x) {
+      return x >= 0 ? x : -x;
+  }
+  function close_enough(x, y) {
+      return abs(x - y) < 0.001;
+  }
+
+  close_enough(12.0003, 12);" #t)
+
+ (not-close-enough "
+  function abs(x) {
+      return x >= 0 ? x : -x;
+  }
+  function close_enough(x, y) {
+      return abs(x - y) < 0.001;
+  }
+
+  close_enough(12.1, 12);" #f)
  )

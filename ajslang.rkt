@@ -4,6 +4,7 @@
 (define lex0
   '((whitespace (whitespace) skip) ;; Skip all whitespace
     (comment ("//" (arbno (not #\newline))) skip) ;; Ignore single line comments
+    ;; TODO: Ignore reserved keywords
     (identifier ((or letter "_" "$") (arbno (or letter digit "_" "$"))) symbol) ; Identifiers / Variable names
     (number (digit (arbno digit)) number)
     (number (digit (arbno digit) "." (arbno digit)) number)
@@ -29,7 +30,45 @@
     (block ("{" statement-list "}") block-stmt)
 
     ;; AdditiveExpression
-    (expression (multiplicative-expression additive-tail) binop-expr)
+    (expression (conditional-expression) cond-expr)
+
+    (conditional-expression (logical-or-expression conditional-expression-tail) conditional-expr)
+
+    (conditional-expression-tail ("?" expression ":" conditional-expression) cond-expr-tail)
+    (conditional-expression-tail () cond-expr-tail-empty)
+
+    (logical-or-expression (logical-and-expression logical-or-tail) logical-or)
+
+    (logical-or-tail ("||" logical-and-expression logical-or-tail) or-expr-tail)
+    (logical-or-tail () logical-or-tail-empty)
+
+    (logical-and-expression (equality-expression logical-and-tail) logical-and-expr)
+
+    (logical-and-tail ("&&" equality-expression logical-and-tail) and-expr-tail)
+    (logical-and-tail () logical-and-tail-empty)
+
+    (equality-expression (relational-expression equality-tail) equality-expr)
+
+    (equality-tail ("===" relational-expression equality-tail) seq-expr-tail)
+    (equality-tail ("!==" relational-expression equality-tail) sneq-expr-tail)
+    (equality-tail ("==" relational-expression equality-tail) eq-expr-tail)
+    (equality-tail ("!=" relational-expression equality-tail) neq-expr-tail)
+    (equality-tail () equality-tail-empty)
+
+    (relational-expression (additive-expression relational-tail) relational-expr)
+
+    (relational-tail ("<" additive-expression relational-tail) lt-expr-tail)
+    (relational-tail (">" additive-expression relational-tail) gt-expr-tail)
+    (relational-tail ("<=" additive-expression relational-tail) le-expr-tail)
+    (relational-tail (">=" additive-expression relational-tail) ge-expr-tail)
+    (relational-tail () relational-tail-empty)
+
+    (additive-expression (multiplicative-expression additive-tail) additive-expr)
+
+    ;; Tail for handling + and -
+    (additive-tail ("+" multiplicative-expression additive-tail) add-expr-tail)
+    (additive-tail ("-" multiplicative-expression additive-tail) sub-expr-tail)
+    (additive-tail () add-tail-empty)
 
     ;; MultiplicativeExpression
     (multiplicative-expression (unary-expression multiplicative-tail) mul-expr)
@@ -40,15 +79,17 @@
     (multiplicative-tail ("%" unary-expression multiplicative-tail) mod-expr-tail)
     (multiplicative-tail () mul-tail-empty)
 
-    ;; Tail for handling + and -
-    (additive-tail ("+" multiplicative-expression additive-tail) add-expr-tail)
-    (additive-tail ("-" multiplicative-expression additive-tail) sub-expr-tail)
-    (additive-tail () add-tail-empty)
+    ;; Unary Expression
+    (unary-expression ("!" unary-expression) not-expr)
+    (unary-expression ("-" unary-expression) neg-expr)
+    (unary-expression (primary-expression) primary-expr)
 
-    ;; UnaryExpression
-    (unary-expression ("(" expression ")") paren-expr)
-    (unary-expression (number) num-expr)
-    (unary-expression (identifier postfix-expression-tail) postfix-expr)
+    ;; Primary Expression
+    (primary-expression ("(" expression ")") paren-expr)
+    (primary-expression ("true") true-expr)
+    (primary-expression ("false") false-expr)
+    (primary-expression (number) num-expr)
+    (primary-expression (identifier postfix-expression-tail) postfix-expr)
 
     ;; Postfix (for function calls)
     (postfix-expression-tail ("(" argument-list ")") func-call-tail)
